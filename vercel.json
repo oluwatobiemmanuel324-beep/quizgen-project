@@ -9,9 +9,6 @@
     { "src": "/api/(.*)", "dest": "/index.js" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ],
-  "functions": {
-    "server.js": { "memory": 1024, "maxDuration": 10 }
-  },
   "env": {
     "NODE_ENV": "production"
   }
