@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - QuizGen</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .contact-container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: var(--card);
+      border-radius: var(--radius);
+    }
+    
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--glass);
+      background: var(--glass-2);
+      color: var(--text);
+      font-size: 16px;
+    }
+    
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .contact-info {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--glass);
+    }
+    
+    .contact-method {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">QG</div>
+        <h1>Contact Us</h1>
+      </div>
+      <nav>
+        <a href="index.html">Home</a>
+      </nav>
+    </header>
+
+    <main class="contact-container">
+      <form class="contact-form" id="contactForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+        
+        <button type="submit" class="btn">Send Message</button>
+      </form>
+
+      <div class="contact-info">
+        <h3>Other ways to reach us</h3>
+        <div class="contact-method">
+          <span>📧</span>
+          <span><a href="mailto:support@quizgen.com">support@quizgen.com</a></span>
+        </div>
+        <div class="contact-method">
+          <span>📱</span>
+          <span><a href="https://wa.me/2348077446094" target="_blank" rel="noopener">WhatsApp: 08077446094</a></span>
+        </div>
+        <div class="contact-method">
+          <span>📍</span>
+          <span><a href="https://www.google.com/maps/search/?api=1&query=123+Learning+Street+Education+City" target="_blank" rel="noopener">123 Learning Street, Education City, 12345</a></span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('contactForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      // Store in IndexedDB until sync is possible
+      const message = {
+        ...data,
+        timestamp: Date.now(),
+        status: 'pending'
+      };
+
+      try {
+        // In real implementation, send to server
+        console.log('Contact form submitted:', message);
+        alert('Thank you for your message! We will get back to you soon.');
+        e.target.reset();
+      } catch (err) {
+        console.error('Error sending message:', err);
+        alert('There was an error sending your message. Please try again.');
+      }
+    };
+  </script>
+  <footer>
+    <a href="contact.html">Contact</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+</body>
+</html>

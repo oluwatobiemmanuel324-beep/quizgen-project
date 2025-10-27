@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>QuizGen — Login</title>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; height:100vh; margin:0 }
+    .login-box {
+      background: #181f2a;
+      padding: 32px 24px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      min-width: 280px;
+      width: 92%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-top: 0;
+      color: #1976ff;
+    }
+    .login-box input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #1976ff;
+      background: #1b2635;
+      color: #fff;
+      font-size: 1em;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      background: #1976ff;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+      font-size: 1em;
+    }
+    .login-box button:hover {
+      background: #ff1744;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login to QuizGen</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" required /><br />
+      <input type="password" id="password" placeholder="Password" required /><br />
+      <button type="submit">Login</button>
+    </form>
+    <div id="loginMsg" style="margin-top:12px;color:#ff1744;font-size:1.1em;"></div>
+  </div>
+  <footer style="position:fixed;left:0;right:0;bottom:0;padding:12px;background:var(--card);text-align:center;">
+    <a href="contact.html">Contact</a> |
+    <a href="terms.html">Terms</a> |
+    <a href="privacy.html">Privacy</a>
+  </footer>
+  <script>
+    document.getElementById('loginForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const loginMsg = document.getElementById('loginMsg');
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('jwt', data.token);
+          loginMsg.style.color = '#1976ff';
+          loginMsg.textContent = 'Login successful!';
+          setTimeout(() => { window.location.href = 'exam1.html'; }, 1200);
+        } else {
+          loginMsg.style.color = '#ff1744';
+          loginMsg.textContent = 'Login failed: ' + (data.error || 'Unknown error');
+        }
+      } catch (err) {
+        loginMsg.style.color = '#ff1744';
+        loginMsg.textContent = 'Login failed: Network error.';
+      }
+    };
+  </script>
+  <script src="/analytics.js"></script>
+</body>
+</html>

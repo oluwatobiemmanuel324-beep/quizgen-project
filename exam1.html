@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuizGen — Upload Notes, Auto-Generate Quiz</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#0f1720;
+      --muted:#9aa6b2;
+      --accent:#1976ff;
+      --accent-2:#ff1744;
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.02);
+      --radius:14px;
+      --text: #e6eef6;
+      color-scheme: dark;
+    }
+    [data-theme='light']{
+      --bg:#eaf2fb;
+      --card:#f8fbff;
+      --muted:#3a4a5a;
+      --accent:#0b61ff;
+      --accent-2:#e53935;
+      --glass: rgba(11,16,20,0.06);
+      --glass-2: rgba(11,16,20,0.04);
+      --text: #0b1720;
+      color-scheme: light;
+    }
+    *{box-sizing:border-box}
+  html,body{height:100%;margin:0;color:var(--text);background:var(--bg)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#00b4ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;box-shadow:0 8px 30px rgba(2,6,12,0.45)}
+    .brand h1{margin:0;font-size:18px}
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{color:var(--muted);font-weight:700;padding:8px;border-radius:8px}
+    nav a:hover{background:var(--glass);color:var(--text)}
+    .theme-toggle{display:flex;gap:8px;align-items:center;padding:6px;border-radius:999px;background:var(--glass);cursor:pointer}
+    .theme-toggle .txt{font-size:13px;color:var(--muted);font-weight:700}
+    .switch{width:46px;height:26px;border-radius:999px;background:rgba(0,0,0,0.12);position:relative;padding:3px}
+    .knob{width:20px;height:20px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:left .22s}
+    [data-theme='light'] .knob{left:23px}
+    .hero-wrap{
+      margin-top:18px;border-radius:20px;overflow:hidden;position:relative;min-height:460px;display:flex;align-items:center;justify-content:center;padding:22px;
+    }
+    .slideshow{position:absolute;inset:0;z-index:0;overflow:hidden}
+    .slide{
+      position:absolute;inset:0;background-size:cover;background-position:center center;opacity:0;transform:scale(1.06);
+      transition:opacity 1.2s ease, transform 9s cubic-bezier(.2,.9,.2,1);
+      will-change:opacity, transform;
+      filter:contrast(1.02) saturate(1.08);
+    }
+    .slide.show{opacity:1;transform:scale(1)}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,12,0.45),rgba(2,6,12,0.18));z-index:1;transition:background .35s}
+    [data-theme='light'] .hero-overlay{background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.2))}
+    .hero-content{position:relative;z-index:2;display:grid;grid-template-columns:1fr 420px;gap:26px;align-items:start;width:100%;max-width:1100px}
+    .hero-card{background:var(--card);padding:28px;border-radius:16px;box-shadow:0 12px 40px rgba(2,6,12,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.03)}
+    [data-theme='light'] .hero-card{box-shadow:0 8px 24px rgba(12,28,48,0.06);border:1px solid rgba(11,16,20,0.04)}
+    .kicker{display:inline-block;padding:8px 12px;border-radius:999px;background:var(--glass);color:var(--muted);font-weight:800;margin-bottom:12px;font-size:13px}
+    .hero-card h2{margin:0 0 8px 0;font-size:28px;line-height:1.05}
+    .hero-card p{color:var(--muted);margin:0 0 18px}
+    .steps{display:flex;gap:10px;margin-top:8px}
+    .pill{padding:10px 12px;border-radius:12px;background:var(--glass-2);font-weight:800;color:var(--muted);font-size:13px}
+    .btn{background:var(--accent);color:white;padding:12px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer}
+    .btn:hover{background:var(--accent-2)}
+    .secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:10px 14px;border-radius:10px}
+    .uploader{display:flex;flex-direction:column;gap:12px}
+    .dropzone{border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px dashed rgba(255,255,255,0.06);padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;text-align:center}
+    .preview{display:flex;gap:12px;align-items:center}
+    .preview img{width:64px;height:64px;border-radius:8px;object-fit:cover}
+    .file-meta{flex:1}
+    .generate{display:flex;gap:8px;align-items:center;margin-top:10px}
+    .section{margin-top:30px}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+    .feature{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .feature h4{margin:0 0 8px}
+    .feature p{margin:0;color:var(--muted)}
+    footer{margin-top:36px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:12px}
+    @media (max-width:1100px){ .hero-content{grid-template-columns:1fr 360px} }
+    @media (max-width:880px){ .hero-content{grid-template-columns:1fr} .uploader{order:2} .hero-card{order:1} .features{grid-template-columns:1fr 1fr} }
+    @media (max-width:560px){ .container{padding:14px} .hero-wrap{min-height:520px;padding:18px} .features{grid-template-columns:1fr} .logo{width:44px;height:44px} }
+    .muted{color:var(--muted)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    /* Modal styles */
+    .modal-bg {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center;
+    }
+    .modal {
+      background: var(--card); color: var(--text); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      padding: 32px 24px; min-width: 320px; max-width: 90vw; text-align: center; position: relative;
+    }
+    .modal input {
+      margin: 18px 0 12px 0; padding: 10px; border-radius: 8px; border: 1px solid var(--muted); width: 80%;
+      font-size: 16px; background: var(--glass-2); color: var(--text);
+    }
+    .modal .btn { margin-top: 12px; width: 100%; }
+    .modal .close {
+      position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">QG</div>
+        <div>
+          <h1 style="margin:0">QuizGen</h1>
+          <div class="muted" style="font-size:12px">Upload notes → Auto quizzes in seconds</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="signup.html">Sign Up</a>
+        <a href="login.html">Login</a>
+        <div class="theme-toggle" id="themeSwitch" role="button" aria-pressed="false" tabindex="0" title="Toggle theme">
+          <div class="txt" id="themeText">Dark</div>
+          <div class="switch" aria-hidden="true"><div class="knob"></div></div>
+        </div>
+      </nav>
+    </header>
+    <!-- HERO: blended background + glass upload card -->
+    <section class="hero-wrap" aria-label="Hero area">
+      <div class="slideshow" id="slideshow" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-content" role="region" aria-labelledby="hero-heading">
+        <div class="hero-card" style="min-height:260px">
+          <span class="kicker">AI • Study Smarter</span>
+          <h2 id="hero-heading">Turn your lecture notes into ready-to-take quizzes — instantly.</h2>
+          <p class="muted">Upload a PDF or an image of your notes and QuizGen extracts key points, generates questions (MCQ & short answer), and builds an interactive quiz tailored to your course.</p>
+          <div class="steps" id="slideTextArea" aria-live="polite"></div>
+          <div style="margin-top:18px;display:flex;gap:10px;align-items:center">
+            <button class="btn" id="ctaUpload">Upload Notes</button>
+            <button class="secondary" id="examplesBtn">Explore Examples</button>
+            <!-- New buttons for study groups -->
+            <button class="btn" id="createGroupBtn">Create Class Group</button>
+            <button class="secondary" id="joinGroupBtn">Join Class Group</button>
+          </div>
+          <div style="margin-top:14px;font-size:13px;color:var(--muted)">Pro tip: Combine typed notes and photos of whiteboard scribbles for richer quizzes.</div>
+        </div>
+        <aside class="uploader">
+          <div class="hero-card" style="padding:12px">
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload notes area. Press enter to browse files.">
+              <svg width="72" height="72" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="opacity:.95"><path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="13" width="18" height="8" rx="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div style="font-weight:800">Drag & drop your notes here</div>
+              <div class="muted" style="font-size:13px">PDF, PNG, JPG — up to 20MB</div>
+              <div style="display:flex;gap:8px;margin-top:12px">
+                <label class="btn" for="fileInput" style="cursor:pointer">Browse files</label>
+                <button class="secondary" id="sampleBtn">Use sample note</button>
+              </div>
+            </div>
+            <input type="file" id="fileInput" accept="application/pdf,image/*" style="display:none" />
+            <div id="previewArea" style="margin-top:12px;display:none">
+              <div class="preview">
+                <img id="thumb" src="" alt="file preview" />
+                <div class="file-meta">
+                  <div id="fileName" style="font-weight:800">notes.pdf</div>
+                  <div class="muted" id="fileSize">120 KB</div>
+                </div>
+              </div>
+              <div class="generate">
+                <button class="btn" id="generateBtn">Generate Quiz</button>
+                <button class="secondary" id="moreOptions">More options</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <div class="hero-card" style="flex:1;padding:12px;">
+              <div style="font-size:12px;color:var(--muted)">Estimated time</div>
+              <div style="font-weight:800;font-size:20px">~ 30 sec</div>
+              <div style="font-size:12px;color:var(--muted)">from upload to quiz</div>
+            </div>
+            <div class="hero-card" style="padding:12px;width:110px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="font-size:12px;color:var(--muted)">Questions</div>
+              <div style="font-weight:800;font-size:20px" id="qCount">10</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+    <!-- Modal for Create/Join Group -->
+    <div class="modal-bg" id="modalBg">
+      <div class="modal" id="modalContent">
+        <button class="close" id="closeModal" aria-label="Close">&times;</button>
+        <!-- Content will be injected here -->
+      </div>
+    </div>
+    <!-- features -->
+    <section id="how" class="section" aria-label="How it works">
+      <h3 style="margin:0 0 8px 0">How it works</h3>
+      <div class="features" id="features">
+        <div class="feature">
+          <h4>1. Upload notes</h4>
+          <p>PDF or images accepted — QuizGen reads text and images using OCR and PDF parsing.</p>
+        </div>
+        <div class="feature">
+          <h4>2. AI extraction</h4>
+          <p>Important facts are extracted, summarized, and converted into question/answer pairs.</p>
+        </div>
+        <div class="feature">
+          <h4>3. Customize & take</h4>
+          <p>Choose question types, difficulty, and length — then take the generated quiz.</p>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <div>© QuizGen — built for students • <span class="muted">Made with ♥</span></div>
+      <div>
+        <a href="contact.html">Contact</a> |
+        <a href="terms.html">Terms</a> |
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </footer>
+  </div>
+  <script>
+    function makeSVGDataURL(svg){ return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); }
+    const svgSlides = [
+      makeSVGDataURL(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'>
+        <defs><linearGradient id='g1' x1='0' x2='1' y1='0' y2='1'><stop offset='0' stop-color='#0b61ff'/><stop offset='1' stop-color='#6ad7ff'/></linearGradient><filter id='f'><feGaussianBlur stdDeviation='60'/></filter></defs>
+        <rect width='1200' height='800' fill='url(#g1)'/>
+        <g filter='url(#f)' opacity='0.96'><circle cx='220' cy='260' r='220' fill='#0a3b9a'/><ellipse cx='740' cy='480' rx='320' ry='220' fill='#00c6ff'/></g>
+      </svg>`),
+      makeSVGDataURL(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'>
+        <defs><linearGradient id='g2'><stop offset='0' stop-color='#ff7a00'/><stop offset='1' stop-color='#ff3da1'/></linearGradient><filter id='f2'><feGaussianBlur stdDeviation='50'/></filter></defs>
+        <rect width='1200' height='800' fill='url(#g2)'/>
+        <g filter='url(#f2)' opacity='0.92'><ellipse cx='300' cy='220' rx='240' ry='180' fill='#ffb35b'/><circle cx='820' cy='520' r='340' fill='#ff5b9a'/></g>
+      </svg>`),
+      makeSVGDataURL(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'>
+        <defs><linearGradient id='g3'><stop offset='0' stop-color='#4f46e5'/><stop offset='1' stop-color='#06b6d4'/></linearGradient><filter id='f3'><feGaussianBlur stdDeviation='55'/></filter></defs>
+        <rect width='1200' height='800' fill='url(#g3)'/>
+        <g filter='url(#f3)' opacity='0.95'><ellipse cx='260' cy='520' rx='340' ry='220' fill='#2b1061'/><circle cx='860' cy='260' r='200' fill='#08a5be'/></g>
+      </svg>`),
+      makeSVGDataURL(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'>
+        <defs><linearGradient id='g4'><stop offset='0' stop-color='#002b36'/><stop offset='1' stop-color='#00c853'/></linearGradient><filter id='f4'><feGaussianBlur stdDeviation='60'/></filter></defs>
+        <rect width='1200' height='800' fill='url(#g4)'/>
+        <g filter='url(#f4)' opacity='0.9'><circle cx='240' cy='200' r='220' fill='#003a4c'/><ellipse cx='760' cy='460' rx='360' ry='240' fill='#00ff9f'/></g>
+      </svg>`)
+    ];
+    const slideTexts = [
+      "Welcome to QuizGen — Your AI-powered study partner!",
+      "Upload your notes and get instant quizzes tailored to your course.",
+      "Switch between dark and light mode for your comfort.",
+      "Try uploading a sample note to see how it works!"
+    ];
+    const slideshowEl = document.getElementById('slideshow');
+    const slides = [];
+    svgSlides.forEach((url, i) => {
+      const s = document.createElement('div');
+      s.className = 'slide';
+      s.style.backgroundImage = `url("${url}")`;
+      s.setAttribute('data-index', i);
+      slideshowEl.appendChild(s);
+      slides.push(s);
+    });
+    const slideTextArea = document.getElementById('slideTextArea');
+    function renderSlideText(text){
+      slideTextArea.innerHTML = `<div class="pill" style="font-weight:800">${text}</div>`;
+    }
+    let current = 0;
+    const slideCount = slides.length;
+    function showSlide(idx){
+      slides.forEach((s,i)=> s.classList.toggle('show', i===idx));
+      renderSlideText(slideTexts[idx]);
+    }
+    showSlide(0);
+    let slideInterval = setInterval(()=>{ current = (current + 1) % slideCount; showSlide(current); }, 3500);
+    const heroWrap = document.querySelector('.hero-wrap');
+    heroWrap.addEventListener('mouseenter', ()=> clearInterval(slideInterval));
+    heroWrap.addEventListener('mouseleave', ()=> { clearInterval(slideInterval); slideInterval = setInterval(()=>{ current = (current + 1) % slideCount; showSlide(current); }, 3500); });
+    const themeSwitch = document.getElementById('themeSwitch');
+    const themeText = document.getElementById('themeText');
+    function applyTheme(t){
+      if(t === 'light'){
+        document.documentElement.setAttribute('data-theme','light');
+        themeText.textContent = 'Light';
+        themeSwitch.setAttribute('aria-pressed','true');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeText.textContent = 'Dark';
+        themeSwitch.setAttribute('aria-pressed','false');
+      }
+    }
+    let saved = localStorage.getItem('quizgen-theme');
+    if(!saved){
+      const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme:light)').matches ? 'light' : 'dark';
+      saved = prefers;
+    }
+    applyTheme(saved);
+    themeSwitch.addEventListener('click', toggleTheme);
+    themeSwitch.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') toggleTheme(); });
+    function toggleTheme(){
+      const now = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      applyTheme(now);
+      localStorage.setItem('quizgen-theme', now);
+    }
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const previewArea = document.getElementById('previewArea');
+    const thumb = document.getElementById('thumb');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const generateBtn = document.getElementById('generateBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const ctaUpload = document.getElementById('ctaUpload');
+    const examplesBtn = document.getElementById('examplesBtn');
+    function humanSize(bytes){
+      if(!bytes) return '';
+      if(bytes < 1024) return bytes + ' B';
+      if(bytes < 1024*1024) return Math.round(bytes/1024)+' KB';
+      return Math.round(bytes/(1024*1024))+' MB';
+    }
+    function showPreview(file){
+      fileName.textContent = file.name || 'notes';
+      fileSize.textContent = file.size ? humanSize(file.size) : '';
+      previewArea.style.display = 'block';
+      if(file.type && file.type.startsWith('image/')){
+        const reader = new FileReader();
+        reader.onload = e => thumb.src = e.target.result;
+        reader.readAsDataURL(file);
+      } else {
+        thumb.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect rx='8' width='64' height='64' fill='%23111'/><text x='50%' y='52%' fill='%23fff' font-size='12' font-family='Arial' text-anchor='middle' dominant-baseline='middle'>PDF</text></svg>`);
+      }
+      window._quizgen_file = file;
+    }
+    dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='rgba(255,255,255,0.14)'; });
+    dropzone.addEventListener('dragleave', e=>{ dropzone.style.borderColor='transparent'; });
+    dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.style.borderColor='transparent'; const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) showPreview(f); });
+    fileInput.addEventListener('change', e=>{ const f = e.target.files && e.target.files[0]; if(f) showPreview(f); });
+    ctaUpload.addEventListener('click', ()=> fileInput.click());
+    dropzone.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+    sampleBtn.addEventListener('click', ()=> {
+      const blob = new Blob(["Sample note: Key concept — Law of Gravity"], {type:'text/plain'});
+      blob.name = 'sample-notes.txt';
+      showPreview(blob);
+      document.getElementById('qCount').textContent = 12;
+    });
+    generateBtn.addEventListener('click', ()=>{
+      const f = window._quizgen_file;
+      if(!f){ alert('Please upload a file first.'); return; }
+      generateBtn.disabled = true;
+      const orig = generateBtn.textContent;
+      generateBtn.textContent = 'Generating...';
+      setTimeout(()=>{
+        generateBtn.disabled = false;
+        generateBtn.textContent = orig;
+        alert('Quiz generated! (Demo) — In production you would be redirected to your quiz.');
+      }, 1600);
+    });
+    examplesBtn.addEventListener('click', ()=> {
+      const prev = current;
+      current = 1;
+      showSlide(current);
+      setTimeout(()=>{ current = prev; showSlide(current); }, 2600);
+    });
+    themeSwitch.setAttribute('tabindex','0');
+    slides.forEach((s,i)=> s.classList.remove('show'));
+    slides[0] && slides[0].classList.add('show');
+
+    // --- MODAL LOGIC FOR GROUP BUTTONS ---
+    const modalBg = document.getElementById('modalBg');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.getElementById('closeModal');
+    function showModal(html){
+      modalContent.innerHTML = `<button class="close" id="closeModal" aria-label="Close">&times;</button>` + html;
+      modalBg.style.display = 'flex';
+      document.getElementById('closeModal').onclick = hideModal;
+    }
+    function hideModal(){
+      modalBg.style.display = 'none';
+    }
+    document.getElementById('createGroupBtn').onclick = function(){
+      // Generate a random group ID (for demo purposes)
+      const groupId = 'CG-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+      const groupLink = window.location.origin + '/secondquizpage.html?id=' + groupId;
+      showModal(`
+        <h3>Create Class Group</h3>
+        <div style="margin:18px 0 8px 0;font-size:16px;">Create a class group with only ten members.</div>
+        <div style="margin:12px 0;font-size:15px;">
+          Share this link with others to join your group:<br>
+          <input type="text" id="groupLinkInput" value="${groupLink}" readonly style="width:90%;margin-top:8px;" />
+          <button class="btn" id="copyLinkBtn" style="margin-top:8px;">Copy Link</button>
+        </div>
+        <button class="btn" id="proceedCreate">Proceed</button>
+      `);
+      setTimeout(()=>{
+        document.getElementById('copyLinkBtn').onclick = function(){
+          const input = document.getElementById('groupLinkInput');
+          input.select();
+          document.execCommand('copy');
+          alert('Link copied!');
+        };
+        document.getElementById('proceedCreate').onclick = function(){
+          hideModal();
+          alert('Class group created! (Demo)');
+          // You can redirect or merge with your second code page here
+          // window.location.href = groupLink;
+        };
+      }, 100);
+    };
+    document.getElementById('joinGroupBtn').onclick = function(){
+      showModal(`
+        <h3>Join Class Group</h3>
+        <div style="margin:18px 0 8px 0;font-size:16px;">Enter class ID number to join:</div>
+        <input type="text" id="classIdInput" placeholder="Class ID" maxlength="16" />
+        <button class="btn" id="proceedJoin">Proceed</button>
+      `);
+      setTimeout(()=>{
+        document.getElementById('proceedJoin').onclick = function(){
+          const id = document.getElementById('classIdInput').value.trim();
+          if(!id){ alert('Please enter a class ID.'); return; }
+          hideModal();
+          // Redirect to chat page with group ID
+          window.location.href = '/secondquizpage.html?id=' + encodeURIComponent(id);
+        };
+      }, 100);
+    };
+    modalBg.onclick = function(e){
+      if(e.target === modalBg) hideModal();
+    };
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape') hideModal();
+    });
+  </script>
+  <script src="/analytics.js"></script>
+</body>
+</html>

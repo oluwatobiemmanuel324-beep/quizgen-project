@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  backups   Backup[]
+  classSections ClassSection[]
+  storageUsage  StorageUsage?
+  planId    Int?
+  plan      Plan?    @relation(fields: [planId], references: [id])
+}
+
+model Backup {
+  id        Int      @id @default(autoincrement())
+  quizzes   String?
+  messages  String?
+  notes     String?
+  timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String?
+  subject   String?
+  message   String?
+  timestamp DateTime @default(now())
+  userId    Int?
+}
+
+model Analytics {
+  id         Int      @id @default(autoincrement())
+  userId     Int?     // optional link to user when available
+  ageRange   String?  // e.g. "18-24"
+  country    String?  // optional, user-provided or geo-derived
+  city       String?  
+  deviceType String?  // e.g. "mobile", "desktop"
+  activeHours String? // comma separated summary or JSON string
+  interests  String?  // comma separated tags
+  engagement String?   // JSON-serialized engagement metrics (stored as string for SQLite)
+  createdAt  DateTime @default(now())
+}
+
+// Billing / quota models (Option A)
+model Plan {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  monthlyQuotaBytes Int     @default(104857600) // default 100MB
+  maxClassSections Int      @default(1)
+  priceCents       Int?     // for future Stripe mapping
+  users            User[]
+}
+
+model StorageUsage {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+  usedBytes Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model ClassSection {
+  id         Int      @id @default(autoincrement())
+  owner      User     @relation(fields: [ownerId], references: [id])
+  ownerId    Int
+  name       String
+  memberCount Int     @default(0)
+  createdAt  DateTime @default(now())
+}
