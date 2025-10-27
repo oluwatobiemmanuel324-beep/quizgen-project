@@ -11,5 +11,6 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "buildCommand": "npm rebuild && npx prisma generate"
 }
